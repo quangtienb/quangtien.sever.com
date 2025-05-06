@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Điều khiển Động cơ Bước Hoàn chỉnh</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .control-panel {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .control-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+        }
+        .control-group h3 {
+            margin-top: 0;
+            color: #3498db;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            min-width: 120px;
+        }
+        button:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        button.danger {
+            background-color: #e74c3c;
+        }
+        button.danger:hover {
+            background-color: #c0392b;
+        }
+        button.success {
+            background-color: #27ae60;
+        }
+        button.success:hover {
+            background-color: #219653;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #ddd;
+            outline: none;
+            margin-bottom: 10px;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            background-color: white;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        .value-display {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 18px;
+        }
+        #status {
+            padding: 15px;
+            background-color: #e8f4fc;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 18px;
+            text-align: center;
+        }
+        #position-display {
+            padding: 15px;
+            background-color: #e8f8f0;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 20px;
+            text-align: center;
+        }
+        #command-history {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        #history-list {
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 0;
+            list-style-type: none;
+        }
+        #history-list li {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        #history-list li:nth-child(odd) {
+            background-color: #f9f9f9;
+        }
+        .connection-status {
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .connected {
+            background-color: #d5f5e3;
+            color: #27ae60;
+        }
+        .disconnected {
+            background-color: #fadbd8;
+            color: #e74c3c;
+        }
+        .flex-container {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .flex-item {
+            flex: 1;
+            min-width: 250px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ĐIỀU KHIỂN ĐỘNG CƠ BƯỚC</h1>
+    
+    <div id="connection-status" class="connection-status disconnected">
+        Chưa kết nối với thiết bị
+    </div>
+    
+    <div class="control-panel">
+        <div class="flex-container">
+            <div class="flex-item">
+                <div class="control-group">
+                    <h3>Điều khiển cơ bản</h3>
+                    <button id="forward-btn" class="success">Quay Thuận</button>
+                    <button id="stop-btn">Dừng</button>
+                    <button id="reverse-btn" class="danger">Quay Nghịch</button>
+                </div>
+                
+                <div class="control-group">
+                    <h3>Thông số động cơ</h3>
+                    <label for="speed">Tốc độ: <span id="speed-value" class="value-display">50</span>%</label>
+                    <input type="range" id="speed" min="1" max="100" value="50">
+                    
+                    <label for="steps">Số bước/vòng: <span id="steps-value" class="value-display">200</span></label>
+                    <input type="range" id="steps" min="1" max="400" value="200">
+                    
+                    <label for="revolutions">Số vòng: <span id="revs-value" class="value-display">1</span></label>
+                    <input type="range" id="revolutions" min="0.1" max="10" step="0.1" value="1">
+                </div>
+            </div>
+            
+            <div class="flex-item">
+                <div class="control-group">
+                    <h3>Cấu hình nâng cao</h3>
+                    <label for="microstep">Chế độ vi bước:</label>
+                    <select id="microstep">
+                        <option value="1">Full step (1x)</option>
+                        <option value="2">Half step (2x)</option>
+                        <option value="4">1/4 step (4x)</option>
+                        <option value="8">1/8 step (8x)</option>
+                        <option value="16">1/16 step (16x)</option>
+                    </select>
+                    
+                    <label for="acceleration">Gia tốc: <span id="accel-value" class="value-display">500</span> bước/s²</label>
+                    <input type="range" id="acceleration" min="100" max="2000" value="500">
+                </div>
+                
+                <div id="position-display">
+                    <div>Vị trí hiện tại:</div>
+                    <div id="current-position" class="value-display" style="font-size: 24px;">0</div>
+                    <div>bước</div>
+                    <button id="reset-position">Reset vị trí</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="status">
+            Trạng thái: <span id="state-text">Đang dừng</span> | 
+            Tốc độ: <span id="speed-text">50%</span> | 
+            Vi bước: <span id="microstep-text">1x</span>
+        </div>
+    </div>
+    
+    <div id="command-history">
+        <h3>Lịch sử lệnh</h3>
+        <button id="clear-history">Xóa lịch sử</button>
+        <ul id="history-list"></ul>
+    </div>
+
+    <script>
+        // DOM Elements
+        const forwardBtn = document.getElementById('forward-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const reverseBtn = document.getElementById('reverse-btn');
+        const resetBtn = document.getElementById('reset-position');
+        const clearHistoryBtn = document.getElementById('clear-history');
+        
+        const speedSlider = document.getElementById('speed');
+        const stepsSlider = document.getElementById('steps');
+        const revsSlider = document.getElementById('revolutions');
+        const accelSlider = document.getElementById('acceleration');
+        const microstepSelect = document.getElementById('microstep');
+        
+        const speedValue = document.getElementById('speed-value');
+        const stepsValue = document.getElementById('steps-value');
+        const revsValue = document.getElementById('revs-value');
+        const accelValue = document.getElementById('accel-value');
+        
+        const stateText = document.getElementById('state-text');
+        const speedText = document.getElementById('speed-text');
+        const microstepText = document.getElementById('microstep-text');
+        const positionDisplay = document.getElementById('current-position');
+        const historyList = document.getElementById('history-list');
+        const connectionStatus = document.getElementById('connection-status');
+        
+        // State variables
+        let currentState = 'stop';
+        let currentPosition = 0;
+        let isConnected = false;
+        let port = null;
+        
+        // Initialize
+        updateDisplays();
+        loadSettings();
+        
+        // Event Listeners
+        speedSlider.addEventListener('input', function() {
+            speedValue.textContent = this.value;
+            speedText.textContent = this.value + '%';
+            saveSettings();
+        });
+        
+        stepsSlider.addEventListener('input', function() {
+            stepsValue.textContent = this.value;
+            saveSettings();
+        });
+        
+        revsSlider.addEventListener('input', function() {
+            revsValue.textContent = this.value;
+            saveSettings();
+        });
+        
+        accelSlider.addEventListener('input', function() {
+            accelValue.textContent = this.value;
+            saveSettings();
+        });
+        
+        microstepSelect.addEventListener('change', function() {
+            microstepText.textContent = this.options[this.selectedIndex].text;
+            saveSettings();
+        });
+        
+        forwardBtn.addEventListener('click', function() {
+            currentState = 'forward';
+            updateStatus();
+            sendCommand('F');
+        });
+        
+        stopBtn.addEventListener('click', function() {
+            currentState = 'stop';
+            updateStatus();
+            sendCommand('S');
+        });
+        
+        reverseBtn.addEventListener('click', function() {
+            currentState = 'reverse';
+            updateStatus();
+            sendCommand('R');
+        });
+        
+        resetBtn.addEventListener('click', function() {
+            currentPosition = 0;
+            positionDisplay.textContent = currentPosition;
+            sendCommand('P0');
+            addToHistory('Reset vị trí về 0');
+        });
+        
+        clearHistoryBtn.addEventListener('click', function() {
+            historyList.innerHTML = '';
+        });
+        
+        // Connect Serial button
+        const connectBtn = document.createElement('button');
+        connectBtn.textContent = 'Kết nối Serial';
+        connectBtn.className = 'success';
+        connectBtn.style.margin = '10px auto';
+        connectBtn.style.display = 'block';
+        connectBtn.addEventListener('click', connectSerial);
+        document.querySelector('.control-panel').prepend(connectBtn);
+        
+        // Functions
+        function updateDisplays() {
+            speedValue.textContent = speedSlider.value;
+            stepsValue.textContent = stepsSlider.value;
+            revsValue.textContent = revsSlider.value;
+            accelValue.textContent = accelSlider.value;
+            microstepText.textContent = microstepSelect.options[microstepSelect.selectedIndex].text;
+            updateStatus();
+        }
+        
+        function updateStatus() {
+            let status = '';
+            switch(currentState) {
+                case 'forward': status = 'Đang quay thuận'; break;
+                case 'reverse': status = 'Đang quay nghịch'; break;
+                default: status = 'Đang dừng';
+            }
+            stateText.textContent = status;
+        }
+        
+        function addToHistory(command) {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            const listItem = document.createElement('li');
+            listItem.textContent = `[${timeString}] ${command}`;
+            historyList.prepend(listItem);
+        }
+        
+        async function connectSerial() {
+            try {
+                port = await navigator.serial.requestPort();
+                await port.open({ baudRate: 9600 });
+                
+                isConnected = true;
+                connectionStatus.textContent = 'Đã kết nối với thiết bị';
+                connectionStatus.className = 'connection-status connected';
+                connectBtn.textContent = 'Ngắt kết nối';
+                connectBtn.removeEventListener('click', connectSerial);
+                connectBtn.addEventListener('click', disconnectSerial);
+                
+                addToHistory('Kết nối serial thành công');
+                
+                // Listen to data from serial port
+                const reader = port.readable.getReader();
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    console.log('Nhận từ thiết bị:', new TextDecoder().decode(value));
+                }
+            } catch (err) {
+                console.error('Lỗi kết nối serial:', err);
+                addToHistory('Lỗi kết nối: ' + err.message);
+            }
+        }
+        
+        async function disconnectSerial() {
+            if (port) {
+                try {
+                    await port.close();
+                    addToHistory('Đã ngắt kết nối serial');
+                } catch (err) {
+                    console.error('Lỗi khi ngắt kết nối:', err);
+                }
+                port = null;
+            }
+            
+            isConnected = false;
+            connectionStatus.textContent = 'Chưa kết nối với thiết bị';
+            connectionStatus.className = 'connection-status disconnected';
+            connectBtn.textContent = 'Kết nối Serial';
+            connectBtn.removeEventListener('click', disconnectSerial);
+            connectBtn.addEventListener('click', connectSerial);
+        }
+        
+        async function sendCommand(cmd) {
+            const speed = speedSlider.value;
+            const steps = stepsSlider.value;
+            const revs = revsSlider.value;
+            const microstep = microstepSelect.value;
+            const accel = accelSlider.value;
+            
+            // Format: [Command][Speed]:[Steps]:[Revs]:[Microstep]:[Accel]
+            const fullCommand = `${cmd}${speed}:${steps}:${revs}:${microstep}:${accel}\n`;
+            
+            console.log('Gửi lệnh:', fullCommand.trim());
+            
+            // Update position display
+            if (cmd === 'F') {
+                const stepsToMove = Math.round(steps * revs * microstep);
+                currentPosition += stepsToMove;
+                positionDisplay.textContent = currentPosition;
+                addToHistory(`Quay thuận: ${stepsToMove} bước (${revs} vòng)`);
+            } 
+            else if (cmd === 'R') {
+                const stepsToMove = Math.round(steps * revs * microstep);
+                currentPosition -= stepsToMove;
+                positionDisplay.textContent = currentPosition;
+                addToHistory(`Quay nghịch: ${stepsToMove} bước (${revs} vòng)`);
+            }
+            else if (cmd === 'S') {
+                addToHistory('Dừng động cơ');
+            }
+            else if (cmd === 'P') {
+                addToHistory(`Đặt vị trí về ${currentPosition}`);
+            }
+            
+            // Send to serial if connected
+            if (isConnected && port) {
+                try {
+                    const writer = port.writable.getWriter();
+                    await writer.write(new TextEncoder().encode(fullCommand));
+                    writer.releaseLock();
+                } catch (err) {
+                    console.error('Lỗi gửi lệnh:', err);
+                    addToHistory('Lỗi gửi lệnh: ' + err.message);
+                    disconnectSerial();
+                }
+            }
+        }
+        
+        function saveSettings() {
+            const settings = {
+                speed: speedSlider.value,
+                steps: stepsSlider.value,
+                revs: revsSlider.value,
+                microstep: microstepSelect.value,
+                accel: accelSlider.value,
+                position: currentPosition
+            };
+            localStorage.setItem('motorControlSettings', JSON.stringify(settings));
+        }
+        
+        function loadSettings() {
+            const saved = JSON.parse(localStorage.getItem('motorControlSettings'));
+            if (saved) {
+                speedSlider.value = saved.speed || 50;
+                stepsSlider.value = saved.steps || 200;
+                revsSlider.value = saved.revs || 1;
+                microstepSelect.value = saved.microstep || 1;
+                accelSlider.value = saved.accel || 500;
+                currentPosition = saved.position || 0;
+                
+                positionDisplay.textContent = currentPosition;
+                updateDisplays();
+            }
+        }
+        
+        // Auto-save settings when leaving page
+        window.addEventListener('beforeunload', saveSettings);
+    </script>
+</body>
+</html>
